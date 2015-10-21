@@ -1,0 +1,133 @@
+\documentclass[12pt]{article}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{comment}
+
+
+\begin{document}
+
+
+%% command definition
+
+\newcommand{\todo}[1]
+{\paragraph{}\textbf{TODO}: #1}
+
+\lstnewenvironment{vhdl}
+{\lstset{language=VHDL, basicstyle=\tiny, frame=single}}{}
+
+\lstnewenvironment{sh}
+{\lstset{frame=single}}{}
+
+\newcommand{\longurl}[2]
+{\url{#1#2}}
+
+\newcommand{\longlongurl}[3]
+{\url{#1#2#3}}
+
+\IfFileExists{version.tex}
+{\input{version.tex}}{\newcommand{\version}{none}}
+
+
+%% block contents passed to tex preprocessor
+%% ignored when processed directly by latex
+%% use with \begin{texpp} \end{texpp}
+\excludecomment{texpp}
+
+
+%%
+%% document start here
+
+\title{Absolute encoder package}
+\author{Fabien Le Mentec \\ lementec@esrf.fr}
+\date{\small{version: \version}}
+\maketitle
+
+
+\newpage
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+
+%%
+\newpage
+\section{Description}
+
+\subsection{Overview}
+\paragraph{}
+The abs\_enc\_pkg implements components for absolute encoder masters and
+slaves.
+
+\paragraph{}
+The term \textit{master} refers to the component driving the clock, or at
+least initiating the data transfer. It is sometimes called the controller.
+The term \textit{slave} refers to the actual encoder device.
+
+\paragraph{}
+This package is optimized for applications that can be dynamically configured
+to implement one amongst different types of encoders at a particular time. As
+much as possible, exclusive resources that can be shared across encoder types
+are factorized (counters, comparators, shift registers ...). However, and in
+order to avoid penalizing simpler applications, static configuration allows to
+exclude resources associated with an unused encoder type.
+
+\paragraph{}
+The following encoder types are available:
+\begin{itemize}
+ \item ENDAT,
+ \item BISS,
+ \item SSI.
+\end{itemize}
+
+\subsection{Supported features}
+\todo
+
+\subsection{Architecture}
+\todo
+
+
+
+%%
+\newpage
+\section{Interfaces}
+
+\begin{texpp}
+Texpp.extract(
+type_ = 'interface',
+file_ = '../src/abs_enc_pkg.vhd',
+name = 'master'
+)
+\end{texpp}
+
+\begin{texpp}
+Texpp.extract(
+type_ = 'interface',
+file_ = '../src/abs_enc_pkg.vhd',
+name = 'slave'
+)
+\end{texpp}
+
+
+%%
+\newpage
+\section{Usage}
+
+\begin{texpp}
+Texpp.extract(
+type_ = 'example',
+file_ = '../sim/common/main.vhd',
+name = 'master',
+title = 'Instantiate a master supporting all encoder types',
+)
+\end{texpp}
+
+\begin{texpp}
+Texpp.extract(
+type_ = 'example',
+file_ = '../sim/common/main.vhd',
+name = 'slave',
+title = 'Instantiate a slave supporting all encoder types'
+)
+\end{texpp}
+
+
+\end{document}

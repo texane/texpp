@@ -1,0 +1,11 @@
+vhdl work ../../src/abs_enc_pkg.vhd
+vhdl work ../../src/abs_enc_utils.vhd
+vhdl work ../../src/abs_enc_master.vhd
+vhdl work ../../src/abs_enc_master_endat.vhd
+vhdl work ../../src/abs_enc_master_biss.vhd
+vhdl work ../../src/abs_enc_master_ssi.vhd
+vhdl work ../../src/abs_enc_slave.vhd
+vhdl work ../../src/abs_enc_slave_endat.vhd
+vhdl work ../../src/abs_enc_slave_biss.vhd
+vhdl work ../../src/abs_enc_slave_ssi.vhd
+vhdl work ../common/main.vhd
