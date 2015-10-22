@@ -1,19 +1,34 @@
 #!/usr/bin/env python
 
 
+import re
+import os
+
+
 class Texpp:
+
+    @staticmethod
+    def init_class():
+        Texpp.latex_ext_re = re.compile('\.tex$')
+        Texpp.vhdl_ext_re = re.compile('\.vhdl?$')
+        Texpp.latex_start_re = re.compile('\\\\begin{texpp}')
+        Texpp.latex_end_re = re.compile('\\\\end{texpp}')
+        return
+
+
     def __init__(self):
-        import re
-        self.latex_re = re.compile('\.tex$')
-        self.vhdl_re = re.compile('\.vhdl?$')
-        self.is_error = False
+        Texpp.init_class()
+
+        Texpp.self_ = self
+
         self.start_re = None
         self.end_re = None
+        self.is_error = False
         self.block_str = ''
         self.in_block = False
         self.out_str = ''
         self.parsed_file_dir = None
-        Texpp.self_ = self
+
         return
 
 
@@ -45,15 +60,13 @@ class Texpp:
         if lang == None: return False
         if lang != 'latex': return False
 
-        import re
-        self.start_re = re.compile('\\\\begin{texpp}')
-        self.end_re = re.compile('\\\\end{texpp}')
+        self.start_re = Texpp.latex_start_re
+        self.end_re = Texpp.latex_end_re
 
-        import os
         self.parsed_file_dir = os.path.dirname(filename)
         if len(self.parsed_file_dir) == 0: self.parsed_file_dir = '.'
 
-        f = self.open_file(filename)
+        f = Texpp.open_file(filename)
         if f == None: return -1
         while True:
             l = f.readline()
@@ -76,58 +89,94 @@ class Texpp:
         return True
 
 
-    def ext_to_lang(self, x):
-        if self.latex_re.search(x) != None: return 'latex'
-        elif self.vhdl_re.search(x) != None: return 'vhdl'
+    @staticmethod
+    def ext_to_lang(x):
+        if Texpp.latex_ext_re.search(x) != None: return 'latex'
+        elif Texpp.vhdl_ext_re.search(x) != None: return 'vhdl'
         return None
 
 
-    def latex_escape(self, s):
-        return s.replace('_', '\\_').replace("\t", "\\t")
+    @staticmethod
+    def latex_escape(s):
+        return s.replace('_', '\\_').replace("\t", "\\t").replace("\n", "\\\\")
 
 
-    def latex_print(self, s):
-        self.out_str += self.latex_escape(s) + '\\\\'
+    @staticmethod
+    def latex_format_error(e):
+        return Texpp.latex_escape(
+            '\textbf{error}: ' + e +
+            '\n'
+            )
 
 
-    def extract_vhdl_interface(self, file_, name):
-        self.latex_print('\textbf{interface}: ' + file_.name + ', ' + name)
-        return None
+    @staticmethod
+    def latex_format_interface(i):
+        return Texpp.latex_escape(
+            '\textbf{interface}: ' +
+            i['name'] + ', ' +
+            'refer to ' + i['file'] +
+            '\n'
+            )
 
 
-    def extract_vhdl_example(self, file_, name):
-        self.latex_print('\textbf{example}: ' + file_.name + ', ' + name)
-        return None
+    @staticmethod
+    def latex_format_example(e):
+        return Texpp.latex_escape(
+            '\textbf{example}: ' + e['name'] + ', '
+            'refer to ' + e['file'] +
+            '\n'
+            )
+
+
+    @staticmethod
+    def vhdl_extract_interface(file_, name):
+        i = {}
+        i['ns'] = 'work'
+        i['name'] = name
+        i['file'] = file_.name
+        i['generics'] = []
+        i['ports'] = []
+        i['notes'] = []
+        return i
+
+
+    @staticmethod
+    def vhdl_extract_example(file_, name):
+        e = {}
+        e['name'] = name
+        e['file'] = file_.name
+        e['notes'] = []
+        return e
 
 
     def extract_(self, type_, file_, name, title):
         lang = self.ext_to_lang(file_)
-        err = None
+        s = None
         if (lang == None) or (lang != 'vhdl'):
-            err = 'invalid file extension: ' + file_
+            s = Texpp.latex_format_error('invalid file extension: ' + file_)
         else:
             file_ = self.parsed_file_dir + '/' + file_
-            f = self.open_file(file_)
+            f = Texpp.open_file(file_)
             if f == None:
-                err = 'file not found ' + file_
+                s = Texpp.latex_format_error('file not found: ' + file_)
             else:
-                err = 'invalid type_'
                 if type_ == 'interface':
-                    err = self.extract_vhdl_interface(f, name)
+                    i = Texpp.vhdl_extract_interface(f, name)
+                    s = Texpp.latex_format_interface(i)
                 elif type_ == 'example':
-                    err = self.extract_vhdl_example(f, name)
+                    e = Texpp.vhdl_extract_example(f, name)
+                    s = Texpp.latex_format_example(e)
+                else:
+                    s = Texpp.latex_format_error('invalid type_: ' + type_)
 
-        if err != None:
-            self.latex_print('\textbf{texpp error}: ' + err)
-            return -1
+        if s != None: self.out_str += s
 
         return 0
 
 
     @staticmethod
     def extract(type_, file_, name, title = None):
-        s = Texpp.self_
-        return s.extract_(type_, file_, name, title)
+        Texpp.self_.extract_(type_, file_, name, title)
 
 
 if __name__ == '__main__':
