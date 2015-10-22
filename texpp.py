@@ -19,6 +19,7 @@ class Texpp:
         Texpp.vhdl_comp_end_re = re.compile('^\s*end\s*component\s*;\s*$')
         Texpp.vhdl_inst_start_re = re.compile('^\s*(\w+)\s*:.*$')
         Texpp.vhdl_inst_end_re = re.compile('^\s*\w*\);\s*$')
+        Texpp.vhdl_comment_re = re.compile('^\s*--(.*)$')
         return
 
 
@@ -130,6 +131,17 @@ class Texpp:
 
 
     @staticmethod
+    def latex_format_note(x):
+        if x['err'] != None: return Texpp.latex_format_error(x['err'])
+        s = Texpp.latex_escape('Note extracted from file ' + x['file'])
+        s += Texpp.latex_escape(' at line ' + str(x['lindex']))
+        s += '\n'
+        s += Texpp.latex_format_code(x['lines'])
+        s += '\n'
+        return s
+
+
+    @staticmethod
     def latex_format_interface(x):
         if x['err'] != None: return Texpp.latex_format_error(x['err'])
         s = Texpp.latex_escape(
@@ -168,7 +180,6 @@ class Texpp:
         x['file'] = file_.name
         x['generics'] = []
         x['ports'] = []
-        x['notes'] = []
         x['lines'] = ''
         x['lindex'] = 0
 
@@ -211,7 +222,6 @@ class Texpp:
         x['err'] = 'not found (invalid syntax ...)'
         x['name'] = name
         x['file'] = file_.name
-        x['notes'] = []
         x['lines'] = ''
         x['lindex'] = 0
 
@@ -242,16 +252,17 @@ class Texpp:
 
 
     @staticmethod
-    def vhdl_extract_tags(file_, name):
+    def vhdl_extract_tags(file_, tags):
         x = {}
         x['err'] = 'not found (invalid syntax ...)'
-        x['name'] = name
         x['file'] = file_.name
-        x['notes'] = []
         x['lines'] = ''
         x['lindex'] = 0
 
-        in_example = False
+        start_re = re.compile('^\s*--\s*' + tags[0] + '.*$')
+        end_re = re.compile('^\s*--\s*' + tags[1] + '.*$')
+
+        in_tag = False
         lindex = -1
 
         while True:
@@ -260,17 +271,17 @@ class Texpp:
 
             lindex += 1
 
-            if in_example == False:
-                m = Texpp.vhdl_inst_start_re.search(l)
-                if (m == None) or (m.groups == 1): continue
-                if m.group(1) != name: continue
-                in_example = True
-                x['lindex'] = lindex
-                x['lines'] = l
-            else:
-                x['lines'] += l
-                m = Texpp.vhdl_inst_end_re.search(l)
+            if in_tag == False:
+                m = start_re.search(l)
                 if m == None: continue
+                in_tag = True
+                x['lindex'] = lindex
+                x['lines'] = ''
+            else:
+                m = end_re.search(l)
+                if m == None:
+                    x['lines'] += l
+                    continue
                 x['err'] = None
                 break
 
@@ -289,7 +300,7 @@ class Texpp:
         return Texpp.make_error('invalid kind: ' + kind)
 
 
-    def extract_(self, kind, path, name):
+    def extract_(self, tags, kind, path, name):
         lang = self.ext_to_lang(path)
         if (lang == None) or (lang != 'vhdl'):
             x = Texpp.make_error('invalid file extension: ' + path)
@@ -298,6 +309,8 @@ class Texpp:
             f = Texpp.open_file(path)
             if f == None:
                 x = Texpp.make_error('file not found: ' + path)
+            elif tags != None:
+                x = Texpp.vhdl_extract_tags(f, tags)
             elif kind == 'interface':
                 x = Texpp.vhdl_extract_interface(f, name)
             elif kind == 'example':
@@ -318,18 +331,19 @@ class Texpp:
         if x['err'] != None: s = Texpp.latex_format_error(x['err'])
         elif kind == 'interface': s = Texpp.latex_format_interface(x)
         elif kind == 'example': s = Texpp.latex_format_example(x)
+        elif kind == 'note': s = Texpp.latex_format_note(x)
         else: s = Texpp.latex_format_error(Texpp.make_kind_error(kind))
         return s
 
 
     @staticmethod
-    def extract(tags, kind, path, name):
-        return Texpp.self_.extract_(kind, path, name)
+    def extract(tags = None, kind = None, path = None, name = None):
+        return Texpp.self_.extract_(tags, kind, path, name)
 
 
     @staticmethod
     def include(tags = None, kind = None, path = None, name = None):
-        x = Texpp.self_.extract_(kind, path, name)
+        x = Texpp.self_.extract_(tags, kind, path, name)
         s = Texpp.self_.format(x, kind)
         Texpp.self_.output(s)
         return

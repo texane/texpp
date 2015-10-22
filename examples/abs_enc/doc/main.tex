@@ -113,19 +113,17 @@ Texpp.include(
 
 \begin{texpp}
 Texpp.include(
- tags = ('texpp_master', 'texpp_master'),
- kind = 'notes',
- path = '../src/abs_enc_pkg.vhd',
- name = 'slave'
+ tags = ('note', 'note'),
+ kind = 'note',
+ path = '../sim/common/main.vhd',
 )
 \end{texpp}
 
 \begin{texpp}
 x = Texpp.extract(
  tags = ('texpp_master', 'texpp_master'),
- kind = 'notes',
- path = '../src/abs_enc_pkg.vhd',
- name = 'slave'
+ kind = 'note',
+ path = '../src/abs_enc_pkg.vhd'
 )
 if x['err'] != None: Texpp.output('AN ERROR OCCURED')
 \end{texpp}

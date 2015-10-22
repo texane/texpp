@@ -88,6 +88,16 @@ port map
 );
 
 
+--
+-- note
+-- by default, the master implements all the encoder
+-- types. this can be specialized by using the generics
+-- to limit resource consumption.
+-- note
+--
+
+-- master_start
+
 master: work.abs_enc_pkg.master
 generic map
 (
@@ -106,6 +116,8 @@ port map
  len => len,
  enc_type => enc_type
 );
+
+-- master_end
 
 
 end rtl;
