@@ -56,7 +56,7 @@ class Texpp:
 
 
     def process_block(self):
-        eval(self.block_str)
+        exec(self.block_str)
         self.block_str = ''
         return
 
@@ -241,34 +241,98 @@ class Texpp:
         return x
 
 
-    def extract_(self, type_, file_, name):
-        lang = self.ext_to_lang(file_)
-        s = None
-        if (lang == None) or (lang != 'vhdl'):
-            s = Texpp.latex_format_error('invalid file extension: ' + file_)
-        else:
-            file_ = self.parsed_file_dir + '/' + file_
-            f = Texpp.open_file(file_)
-            if f == None:
-                s = Texpp.latex_format_error('file not found: ' + file_)
+    @staticmethod
+    def vhdl_extract_tags(file_, name):
+        x = {}
+        x['err'] = 'not found (invalid syntax ...)'
+        x['name'] = name
+        x['file'] = file_.name
+        x['notes'] = []
+        x['lines'] = ''
+        x['lindex'] = 0
+
+        in_example = False
+        lindex = -1
+
+        while True:
+            l = file_.readline()
+            if len(l) == 0: break
+
+            lindex += 1
+
+            if in_example == False:
+                m = Texpp.vhdl_inst_start_re.search(l)
+                if (m == None) or (m.groups == 1): continue
+                if m.group(1) != name: continue
+                in_example = True
+                x['lindex'] = lindex
+                x['lines'] = l
             else:
-                if type_ == 'interface':
-                    x = Texpp.vhdl_extract_interface(f, name)
-                    s = Texpp.latex_format_interface(x)
-                elif type_ == 'example':
-                    x = Texpp.vhdl_extract_example(f, name)
-                    s = Texpp.latex_format_example(x)
-                else:
-                    s = Texpp.latex_format_error('invalid type_: ' + type_)
+                x['lines'] += l
+                m = Texpp.vhdl_inst_end_re.search(l)
+                if m == None: continue
+                x['err'] = None
+                break
 
-        if s != None: self.out_str += s
-
-        return 0
+        return x
 
 
     @staticmethod
-    def extract(type_, file_, name):
-        Texpp.self_.extract_(type_, file_, name)
+    def make_error(s):
+        x = {}
+        x['err'] = s
+        return x
+
+
+    @staticmethod
+    def make_kind_error(kind):
+        return Texpp.make_error('invalid kind: ' + kind)
+
+
+    def extract_(self, kind, path, name):
+        lang = self.ext_to_lang(path)
+        if (lang == None) or (lang != 'vhdl'):
+            x = Texpp.make_error('invalid file extension: ' + path)
+        else:
+            path = self.parsed_file_dir + '/' + path
+            f = Texpp.open_file(path)
+            if f == None:
+                x = Texpp.make_error('file not found: ' + path)
+            elif kind == 'interface':
+                x = Texpp.vhdl_extract_interface(f, name)
+            elif kind == 'example':
+                x = Texpp.vhdl_extract_example(f, name)
+            else:
+                x = Texpp.make_kind_error(kind)
+        return x
+
+
+    @staticmethod
+    def output(s):
+        Texpp.self_.out_str += s
+        return
+
+
+    @staticmethod
+    def format(x, kind):
+        if x['err'] != None: s = Texpp.latex_format_error(x['err'])
+        elif kind == 'interface': s = Texpp.latex_format_interface(x)
+        elif kind == 'example': s = Texpp.latex_format_example(x)
+        else: s = Texpp.latex_format_error(Texpp.make_kind_error(kind))
+        return s
+
+
+    @staticmethod
+    def extract(tags, kind, path, name):
+        return Texpp.self_.extract_(kind, path, name)
+
+
+    @staticmethod
+    def include(tags = None, kind = None, path = None, name = None):
+        x = Texpp.self_.extract_(kind, path, name)
+        s = Texpp.self_.format(x, kind)
+        Texpp.self_.output(s)
+        return
 
 
 if __name__ == '__main__':

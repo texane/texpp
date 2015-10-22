@@ -96,19 +96,38 @@ The following encoder types are available:
 \section{Interfaces}
 
 \begin{texpp}
-Texpp.extract(
-type_ = 'interface',
-file_ = '../src/abs_enc_pkg.vhd',
-name = 'master'
+Texpp.include(
+ kind = 'interface',
+ path = '../src/abs_enc_pkg.vhd',
+ name = 'master'
 )
 \end{texpp}
 
 \begin{texpp}
-Texpp.extract(
-type_ = 'interface',
-file_ = '../src/abs_enc_pkg.vhd',
-name = 'slave'
+Texpp.include(
+ kind = 'interface',
+ path = '../src/abs_enc_pkg.vhd',
+ name = 'slave'
 )
+\end{texpp}
+
+\begin{texpp}
+Texpp.include(
+ tags = ('texpp_master', 'texpp_master'),
+ kind = 'notes',
+ path = '../src/abs_enc_pkg.vhd',
+ name = 'slave'
+)
+\end{texpp}
+
+\begin{texpp}
+x = Texpp.extract(
+ tags = ('texpp_master', 'texpp_master'),
+ kind = 'notes',
+ path = '../src/abs_enc_pkg.vhd',
+ name = 'slave'
+)
+if x['err'] != None: Texpp.output('AN ERROR OCCURED')
 \end{texpp}
 
 
@@ -117,18 +136,18 @@ name = 'slave'
 \section{Examples}
 
 \begin{texpp}
-Texpp.extract(
-type_ = 'example',
-file_ = '../sim/common/main.vhd',
-name = 'master'
+Texpp.include(
+ kind = 'example',
+ path = '../sim/common/main.vhd',
+ name = 'master'
 )
 \end{texpp}
 
 \begin{texpp}
-Texpp.extract(
-type_ = 'example',
-file_ = '../sim/common/main.vhd',
-name = 'slave'
+Texpp.include(
+ kind = 'example',
+ path = '../sim/common/main.vhd',
+ name = 'slave'
 )
 \end{texpp}
 

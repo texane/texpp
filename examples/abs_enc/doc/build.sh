@@ -2,7 +2,7 @@
 
 # preprocess using texpp
 if [ ! -z "TEXPP_PATH" ]; then
-    TEXPP_PATH=$HOME/segfs/repo/texpp/texpp.py
+    TEXPP_PATH=../../../texpp.py
     if [ ! -e $TEXPP_PATH ]; then
 	TEXPP_PATH=/segfs/linux/dance_sdk/tools/texpp.py
     fi
