@@ -20,6 +20,9 @@ class Texpp:
         Texpp.vhdl_inst_start_re = re.compile('^\s*(\w+)\s*:.*$')
         Texpp.vhdl_inst_end_re = re.compile('^\s*\w*\);\s*$')
         Texpp.vhdl_comment_re = re.compile('^\s*--(.*)$')
+        Texpp.EOB = 0
+        Texpp.EOL = 1
+        Texpp.EOF = 2
         return
 
 
@@ -260,7 +263,13 @@ class Texpp:
         x['lindex'] = 0
 
         start_re = re.compile('^\s*--\s*' + tags[0] + '.*$')
-        end_re = re.compile('^\s*--\s*' + tags[1] + '.*$')
+        if type(tags[1]) == str:
+            end_re = re.compile('^\s*--\s*' + tags[1] + '.*$')
+        elif tags[1] not in [ Texpp.EOB ]:
+            x['err'] = 'invalid tag'
+            return x
+        else:
+            end_re = None
 
         in_tag = False
         lindex = -1
@@ -277,9 +286,16 @@ class Texpp:
                 in_tag = True
                 x['lindex'] = lindex
                 x['lines'] = ''
-            else:
+            elif end_re != None:
                 m = end_re.search(l)
                 if m == None:
+                    x['lines'] += l
+                    continue
+                x['err'] = None
+                break
+            elif tags[1] == Texpp.EOB:
+                m = Texpp.vhdl_comment_re.search(l)
+                if m != None:
                     x['lines'] += l
                     continue
                 x['err'] = None

@@ -11,13 +11,13 @@
 
 --
 -- licence
--- this package and the associated files are distributed
+--
+-- This package and the associated files are distributed
 -- under IDCL, the I Dont Care Licence. You are allowed
 -- to do whatever you want with it, at your own risk and
 -- profit. The author cannot be held responsible for any
 -- damage, including rocket crash (while he would be very
 -- interested to know if this code is used in space).
--- licence
 --
 
 
