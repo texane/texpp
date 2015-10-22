@@ -23,6 +23,9 @@ port
  ma_clk_fedge: in std_logic;
  ma_clk_redge: in std_logic;
 
+ -- the edges we are interested in
+ ma_clk_edge: out std_logic;
+
  -- master clock reset
  -- if ma_clk_rst_en, use ma_clk_rst_level
  ma_clk_rst_en: out std_logic;
@@ -220,6 +223,12 @@ lsb_to_msb_en <= '0';
 
 gate <= '0';
 mosi <= '0';
+
+
+--
+-- use rising edge
+
+ma_clk_edge <= ma_clk_redge;
 
 
 end architecture;

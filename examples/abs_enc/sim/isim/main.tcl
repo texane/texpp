@@ -6,4 +6,4 @@ if { [ file exists user.tcl ] == 1 } {
  source endat.tcl
 }
 
-run 150 us
+run 200 us

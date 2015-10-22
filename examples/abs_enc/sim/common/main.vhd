@@ -18,10 +18,6 @@ architecture rtl of main is
 
 constant CLK_FREQ: integer := 50000000;
 
-constant ENABLE_ENDAT: boolean := TRUE;
-constant ENABLE_BISS: boolean := TRUE;
-constant ENABLE_SSI: boolean := TRUE;
-
 constant DATA_LEN: integer := 16;
 constant LEN_WIDTH: integer := work.abs_enc_pkg.integer_length(DATA_LEN);
 
@@ -76,10 +72,7 @@ begin
 slave: work.abs_enc_pkg.slave
 generic map
 (
- CLK_FREQ => CLK_FREQ,
- ENABLE_ENDAT => ENABLE_ENDAT,
- ENABLE_BISS => ENABLE_BISS,
- ENABLE_SSI => ENABLE_SSI
+ CLK_FREQ => CLK_FREQ
 )
 port map
 (
@@ -98,10 +91,7 @@ port map
 master: work.abs_enc_pkg.master
 generic map
 (
- CLK_FREQ => CLK_FREQ,
- ENABLE_ENDAT => ENABLE_ENDAT,
- ENABLE_BISS => ENABLE_BISS,
- ENABLE_SSI => ENABLE_SSI
+ CLK_FREQ => CLK_FREQ
 )
 port map
 (

@@ -348,6 +348,9 @@ port
  ma_clk_fedge: in std_logic;
  ma_clk_redge: in std_logic;
 
+ -- the edge we are interested in
+ ma_clk_edge: out std_logic;
+
  -- master clock reset
  -- if ma_clk_rst_en, use ma_clk_rst_level
  ma_clk_rst_en: out std_logic;
@@ -397,6 +400,9 @@ port
  -- master clock edges
  ma_clk_fedge: in std_logic;
  ma_clk_redge: in std_logic;
+
+ -- the edge we are interested in
+ ma_clk_edge: out std_logic;
 
  -- master clock reset
  -- if ma_clk_rst_en, use ma_clk_rst_level
@@ -448,6 +454,9 @@ port
  ma_clk_fedge: in std_logic;
  ma_clk_redge: in std_logic;
 
+ -- the edge we are interested in
+ ma_clk_edge: out std_logic;
+
  -- master clock reset
  -- if ma_clk_rst_en, use ma_clk_rst_level
  ma_clk_rst_en: out std_logic;
@@ -486,7 +495,7 @@ end component;
 --
 -- utilities
 
-component lsb_to_msb is
+component lsb_to_msb
 port
 (
  en: in std_logic;
@@ -497,7 +506,7 @@ port
 end component;
 
 
-component bin_to_gray is
+component bin_to_gray
 port
 (
  en: in std_logic;
@@ -507,7 +516,7 @@ port
 end component;
 
 
-component gray_to_bin is
+component gray_to_bin
 port
 (
  en: in std_logic;
@@ -517,7 +526,7 @@ port
 end component;
 
 
-component extend_sign is
+component extend_sign
 port
 (
  data_len: in unsigned;

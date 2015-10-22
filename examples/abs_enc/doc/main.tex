@@ -44,7 +44,7 @@
 
 
 \newpage
-\setcounter{tocdepth}{1}
+\setcounter{tocdepth}{2}
 \tableofcontents
 
 
@@ -70,16 +70,21 @@ are factorized (counters, comparators, shift registers ...). However, and in
 order to avoid penalizing simpler applications, static configuration allows to
 exclude resources associated with an unused encoder type.
 
+
+\subsection{Supported features}
+\todo
 \paragraph{}
 The following encoder types are available:
 \begin{itemize}
- \item ENDAT,
+ \item ENDAT (version 2.1, send position mode),
  \item BISS,
  \item SSI.
 \end{itemize}
 
-\subsection{Supported features}
+
+\subsection{Performances}
 \todo
+
 
 \subsection{Architecture}
 \todo
@@ -109,14 +114,13 @@ name = 'slave'
 
 %%
 \newpage
-\section{Usage}
+\section{Examples}
 
 \begin{texpp}
 Texpp.extract(
 type_ = 'example',
 file_ = '../sim/common/main.vhd',
-name = 'master',
-title = 'Instantiate a master supporting all encoder types',
+name = 'master'
 )
 \end{texpp}
 
@@ -124,8 +128,7 @@ title = 'Instantiate a master supporting all encoder types',
 Texpp.extract(
 type_ = 'example',
 file_ = '../sim/common/main.vhd',
-name = 'slave',
-title = 'Instantiate a slave supporting all encoder types'
+name = 'slave'
 )
 \end{texpp}
 

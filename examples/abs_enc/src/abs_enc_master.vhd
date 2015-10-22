@@ -129,7 +129,7 @@ signal ma_half_match: std_logic;
 
 signal ma_clk_redge: std_logic;
 signal ma_clk_fedge: std_logic;
-alias ma_clk_edge is ma_clk_redge;
+signal ma_clk_edge: std_logic;
 
 --
 -- encoder multiplexed signal
@@ -161,6 +161,7 @@ constant ENC_MUX_BISS: integer :=
 constant ENC_MUX_SSI: integer :=
  work.abs_enc_pkg.get_enc_mux_ssi(ENABLE_ENDAT, ENABLE_BISS, ENABLE_SSI);
 
+signal ma_clk_edge_mux: std_logic_vector(ENC_MUX_COUNT - 1 downto 0);
 signal ma_clk_rst_en_mux: std_logic_vector(ENC_MUX_COUNT - 1 downto 0);
 signal ma_clk_rst_val_mux: std_logic_vector(ENC_MUX_COUNT - 1 downto 0);
 signal mosi_mux: std_logic_vector(ENC_MUX_COUNT - 1 downto 0);
@@ -454,6 +455,7 @@ port map
  rst => rst,
  ma_clk_fedge => ma_clk_fedge,
  ma_clk_redge => ma_clk_redge,
+ ma_clk_edge => ma_clk_edge_mux(ENC_MUX_ENDAT),
  ma_clk_rst_en => ma_clk_rst_en_mux(ENC_MUX_ENDAT),
  ma_clk_rst_val => ma_clk_rst_val_mux(ENC_MUX_ENDAT),
  mosi => mosi_mux(ENC_MUX_ENDAT),
@@ -485,6 +487,7 @@ port map
  rst => rst,
  ma_clk_fedge => ma_clk_fedge,
  ma_clk_redge => ma_clk_redge,
+ ma_clk_edge => ma_clk_edge_mux(ENC_MUX_BISS),
  ma_clk_rst_en => ma_clk_rst_en_mux(ENC_MUX_BISS),
  ma_clk_rst_val => ma_clk_rst_val_mux(ENC_MUX_BISS),
  mosi => mosi_mux(ENC_MUX_BISS),
@@ -516,6 +519,7 @@ port map
  rst => rst,
  ma_clk_fedge => ma_clk_fedge,
  ma_clk_redge => ma_clk_redge,
+ ma_clk_edge => ma_clk_edge_mux(ENC_MUX_SSI),
  ma_clk_rst_en => ma_clk_rst_en_mux(ENC_MUX_SSI),
  ma_clk_rst_val => ma_clk_rst_val_mux(ENC_MUX_SSI),
  mosi => mosi_mux(ENC_MUX_SSI),
@@ -541,6 +545,7 @@ end generate gen_ssi;
 process
 (
  enc_type,
+ ma_clk_edge_mux,
  ma_clk_rst_en_mux,
  ma_clk_rst_val_mux,
  mosi_mux,
@@ -555,6 +560,7 @@ process
 
 begin
 
+ ma_clk_edge <= ma_clk_redge;
  ma_clk_rst_en <= '0';
  ma_clk_rst_val <= '1';
  mosi <= '0';
@@ -568,6 +574,7 @@ begin
 
  for i in 0 to ENC_MUX_COUNT - 1 loop
   if enc_mux_to_type(i) = enc_type then
+   ma_clk_edge <= ma_clk_edge_mux(i);
    ma_clk_rst_en <= ma_clk_rst_en_mux(i);
    ma_clk_rst_val <= ma_clk_rst_val_mux(i);
    mosi <= mosi_mux(i);

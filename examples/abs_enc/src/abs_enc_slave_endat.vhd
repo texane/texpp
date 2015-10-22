@@ -124,13 +124,14 @@ begin
 
 --
 -- sipo register
+-- sampled at falling edge by slave
 
 process
 begin
 
  wait until rising_edge(clk);
 
- if (ma_clk_redge = '1') then
+ if (ma_clk_fedge = '1') then
   sipo_val <= sipo_val(sipo_val'length - 2 downto 0) & mosi;
  end if;
 
@@ -297,7 +298,7 @@ tm_top <= to_unsigned(TM_VAL, tm_top'length);
 --
 -- master clock edge we are looking
 
-ma_clk_edge <= ma_clk_redge;
+ma_clk_edge <= ma_clk_fedge;
 
 
 end slave_endat_rtl; 
