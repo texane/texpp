@@ -133,7 +133,7 @@ class Texpp:
     @staticmethod
     def latex_format_note(x):
         if x['err'] != None: return Texpp.latex_format_error(x['err'])
-        s = Texpp.latex_escape('Note extracted from file ' + x['file'])
+        s = Texpp.latex_escape('Note from file ' + x['file'])
         s += Texpp.latex_escape(' at line ' + str(x['lindex']))
         s += '\n'
         s += Texpp.latex_format_code(x['lines'])
@@ -148,7 +148,7 @@ class Texpp:
             '\subsection{' + x['ns'] + '.' + x['name'] + '}'
             )
         s += '\n'
-        s += Texpp.latex_escape('Extracted from file ' + x['file'])
+        s += Texpp.latex_escape('Interface from file ' + x['file'])
         s += Texpp.latex_escape(' at line ' + str(x['lindex']))
         s += '\n'
         s += Texpp.latex_format_code(x['lines'])
@@ -162,7 +162,7 @@ class Texpp:
         s = Texpp.latex_escape(
             '\subsection{' + x['name'] + '}'
             )
-        s += Texpp.latex_escape('Extracted from file ' + x['file'])
+        s += Texpp.latex_escape('Example from file ' + x['file'])
         s += Texpp.latex_escape(' at line ' + str(x['lindex']))
         s += '\n'
         s += Texpp.latex_format_code(x['lines'])
