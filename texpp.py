@@ -17,6 +17,8 @@ class Texpp:
         Texpp.vhdl_pkg_end_re = re.compile('^\s*end\s*package\s+(\w+)\s*;\s*$')
         Texpp.vhdl_comp_start_re = re.compile('^\s*component\s+(\w+)\s*$')
         Texpp.vhdl_comp_end_re = re.compile('^\s*end\s*component\s*;\s*$')
+        Texpp.vhdl_inst_start_re = re.compile('^\s*(\w+)\s*:.*$')
+        Texpp.vhdl_inst_end_re = re.compile('^\s*\w*\);\s*$')
         return
 
 
@@ -114,10 +116,8 @@ class Texpp:
 
     @staticmethod
     def latex_format_error(e):
-        return Texpp.latex_escape(
-            '\textbf{error}: ' + e +
-            '\n'
-            )
+        s = Texpp.latex_escape('\textbf{error}: ' + e + '\n')
+        return s
 
 
     @staticmethod
@@ -130,83 +130,118 @@ class Texpp:
 
 
     @staticmethod
-    def latex_format_interface(i):
-        if i['err'] != None: return Texpp.latex_format_error(i['err'])
+    def latex_format_interface(x):
+        if x['err'] != None: return Texpp.latex_format_error(x['err'])
         s = Texpp.latex_escape(
-            '\subsection{' + i['ns'] + '.' + i['name'] + '}'
+            '\subsection{' + x['ns'] + '.' + x['name'] + '}'
             )
         s += '\n'
-        s += Texpp.latex_escape('extracted from file ' + i['file'])
+        s += Texpp.latex_escape('Extracted from file ' + x['file'])
+        s += Texpp.latex_escape(' at line ' + str(x['lindex']))
         s += '\n'
-        s += Texpp.latex_format_code(i['lines'])
+        s += Texpp.latex_format_code(x['lines'])
         s += '\n'
         return s
 
 
     @staticmethod
-    def latex_format_example(e):
-        if e['err'] != None: return Texpp.latex_format_error(e['err'])
+    def latex_format_example(x):
+        if x['err'] != None: return Texpp.latex_format_error(x['err'])
         s = Texpp.latex_escape(
-            '\subsection{' + e['name'] + '}'
+            '\subsection{' + x['name'] + '}'
             )
-        s += Texpp.latex_escape('refer to file ' + e['file'])
+        s += Texpp.latex_escape('Extracted from file ' + x['file'])
+        s += Texpp.latex_escape(' at line ' + str(x['lindex']))
+        s += '\n'
+        s += Texpp.latex_format_code(x['lines'])
         s += '\n'
         return s
 
 
     @staticmethod
     def vhdl_extract_interface(file_, name):
-        i = {}
-        i['lang'] = 'vhdl'
-        i['ns'] = ''
-        i['name'] = name
-        i['file'] = file_.name
-        i['generics'] = []
-        i['ports'] = []
-        i['notes'] = []
-        i['lines'] = ''
-        i['err'] = 'not found (invalid syntax ...)'
+        x = {}
+        x['err'] = 'not found (invalid syntax ...)'
+        x['lang'] = 'vhdl'
+        x['ns'] = ''
+        x['name'] = name
+        x['file'] = file_.name
+        x['generics'] = []
+        x['ports'] = []
+        x['notes'] = []
+        x['lines'] = ''
+        x['lindex'] = 0
 
         in_pkg = False
         in_comp = False
+        lindex = -1
 
         while True:
             l = file_.readline()
             if len(l) == 0: break
 
+            lindex += 1
+
             if in_pkg == False:
                 m = Texpp.vhdl_pkg_start_re.search(l)
                 if (m == None) or (m.groups == 1): continue
                 in_pkg = True
-                i['ns'] = m.group(1)
+                x['ns'] = m.group(1)
             elif in_comp == False:
                 m = Texpp.vhdl_comp_start_re.search(l)
                 if (m == None) or (m.groups == 1): continue
                 if m.group(1) != name: continue
                 in_comp = True
-                i['name'] = m.group(1)
-                i['lines'] += l
+                x['name'] = m.group(1)
+                x['lines'] = l
             elif (in_pkg == True) and (in_comp == True):
-                i['lines'] += l
+                x['lines'] += l
                 m = Texpp.vhdl_comp_end_re.search(l)
                 if (m == None): continue
-                i['err'] = None
+                x['err'] = None
+                x['lindex'] = lindex
                 break
 
-        return i
+        return x
 
 
     @staticmethod
     def vhdl_extract_example(file_, name):
-        e = {}
-        e['err'] = None
-        e['name'] = name
-        e['file'] = file_.name
-        e['notes'] = []
-        return e
+        x = {}
+        x['err'] = 'not found (invalid syntax ...)'
+        x['name'] = name
+        x['file'] = file_.name
+        x['notes'] = []
+        x['lines'] = ''
+        x['lindex'] = 0
+
+        in_example = False
+        lindex = -1
+
+        while True:
+            l = file_.readline()
+            if len(l) == 0: break
+
+            lindex += 1
+
+            if in_example == False:
+                m = Texpp.vhdl_inst_start_re.search(l)
+                if (m == None) or (m.groups == 1): continue
+                if m.group(1) != name: continue
+                in_example = True
+                x['lindex'] = lindex
+                x['lines'] = l
+            else:
+                x['lines'] += l
+                m = Texpp.vhdl_inst_end_re.search(l)
+                if m == None: continue
+                x['err'] = None
+                break
+
+        return x
 
 
-    def extract_(self, type_, file_, name, title):
+    def extract_(self, type_, file_, name):
         lang = self.ext_to_lang(file_)
         s = None
         if (lang == None) or (lang != 'vhdl'):
@@ -218,11 +253,11 @@ class Texpp:
                 s = Texpp.latex_format_error('file not found: ' + file_)
             else:
                 if type_ == 'interface':
-                    i = Texpp.vhdl_extract_interface(f, name)
-                    s = Texpp.latex_format_interface(i)
+                    x = Texpp.vhdl_extract_interface(f, name)
+                    s = Texpp.latex_format_interface(x)
                 elif type_ == 'example':
-                    e = Texpp.vhdl_extract_example(f, name)
-                    s = Texpp.latex_format_example(e)
+                    x = Texpp.vhdl_extract_example(f, name)
+                    s = Texpp.latex_format_example(x)
                 else:
                     s = Texpp.latex_format_error('invalid type_: ' + type_)
 
@@ -232,8 +267,8 @@ class Texpp:
 
 
     @staticmethod
-    def extract(type_, file_, name, title = None):
-        Texpp.self_.extract_(type_, file_, name, title)
+    def extract(type_, file_, name):
+        Texpp.self_.extract_(type_, file_, name)
 
 
 if __name__ == '__main__':
