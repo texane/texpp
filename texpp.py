@@ -11,8 +11,12 @@ class Texpp:
     def init_class():
         Texpp.latex_ext_re = re.compile('\.tex$')
         Texpp.vhdl_ext_re = re.compile('\.vhdl?$')
-        Texpp.latex_start_re = re.compile('\\\\begin{texpp}')
-        Texpp.latex_end_re = re.compile('\\\\end{texpp}')
+        Texpp.latex_start_re = re.compile('^\s*\\\\begin{texpp}\s*$')
+        Texpp.latex_end_re = re.compile('^\s*\\\\end{texpp}\s*$')
+        Texpp.vhdl_pkg_start_re = re.compile('^\s*package\s+(\w+)\s+is\s*$')
+        Texpp.vhdl_pkg_end_re = re.compile('^\s*end\s*package\s+(\w+)\s*;\s*$')
+        Texpp.vhdl_comp_start_re = re.compile('^\s*component\s+(\w+)\s*$')
+        Texpp.vhdl_comp_end_re = re.compile('^\s*end\s*component\s*;\s*$')
         return
 
 
@@ -71,6 +75,7 @@ class Texpp:
         while True:
             l = f.readline()
             if len(l) == 0: break
+
             if self.in_block == True:
                 if self.is_block_end(l) == True:
                     self.process_block()
@@ -81,6 +86,7 @@ class Texpp:
                 self.in_block = True
             else:
                 self.out_str += l
+
         return 0
 
 
@@ -98,7 +104,12 @@ class Texpp:
 
     @staticmethod
     def latex_escape(s):
-        return s.replace('_', '\\_').replace("\t", "\\t").replace("\n", "\\\\")
+        return (
+            s.replace('_', '\\_').
+            replace("\t", "\\t").
+            replace("\b", "\\b").
+            replace("\n", "\\\\\n")
+            )
 
 
     @staticmethod
@@ -110,39 +121,85 @@ class Texpp:
 
 
     @staticmethod
-    def latex_format_interface(i):
-        return Texpp.latex_escape(
-            '\textbf{interface}: ' +
-            i['name'] + ', ' +
-            'refer to ' + i['file'] +
-            '\n'
+    def latex_format_code(s):
+        return (
+            Texpp.latex_escape('\begin{vhdl}') + '\n' +
+            s +
+            Texpp.latex_escape('\end{vhdl}') + '\n'
             )
 
 
     @staticmethod
-    def latex_format_example(e):
-        return Texpp.latex_escape(
-            '\textbf{example}: ' + e['name'] + ', '
-            'refer to ' + e['file'] +
-            '\n'
+    def latex_format_interface(i):
+        if i['err'] != None: return Texpp.latex_format_error(i['err'])
+        s = Texpp.latex_escape(
+            '\subsection{' + i['ns'] + '.' + i['name'] + '}'
             )
+        s += '\n'
+        s += Texpp.latex_escape('extracted from file ' + i['file'])
+        s += '\n'
+        s += Texpp.latex_format_code(i['lines'])
+        s += '\n'
+        return s
+
+
+    @staticmethod
+    def latex_format_example(e):
+        if e['err'] != None: return Texpp.latex_format_error(e['err'])
+        s = Texpp.latex_escape(
+            '\subsection{' + e['name'] + '}'
+            )
+        s += Texpp.latex_escape('refer to file ' + e['file'])
+        s += '\n'
+        return s
 
 
     @staticmethod
     def vhdl_extract_interface(file_, name):
         i = {}
-        i['ns'] = 'work'
+        i['lang'] = 'vhdl'
+        i['ns'] = ''
         i['name'] = name
         i['file'] = file_.name
         i['generics'] = []
         i['ports'] = []
         i['notes'] = []
+        i['lines'] = ''
+        i['err'] = 'not found (invalid syntax ...)'
+
+        in_pkg = False
+        in_comp = False
+
+        while True:
+            l = file_.readline()
+            if len(l) == 0: break
+
+            if in_pkg == False:
+                m = Texpp.vhdl_pkg_start_re.search(l)
+                if (m == None) or (m.groups == 1): continue
+                in_pkg = True
+                i['ns'] = m.group(1)
+            elif in_comp == False:
+                m = Texpp.vhdl_comp_start_re.search(l)
+                if (m == None) or (m.groups == 1): continue
+                if m.group(1) != name: continue
+                in_comp = True
+                i['name'] = m.group(1)
+                i['lines'] += l
+            elif (in_pkg == True) and (in_comp == True):
+                i['lines'] += l
+                m = Texpp.vhdl_comp_end_re.search(l)
+                if (m == None): continue
+                i['err'] = None
+                break
+
         return i
 
 
     @staticmethod
     def vhdl_extract_example(file_, name):
         e = {}
+        e['err'] = None
         e['name'] = name
         e['file'] = file_.name
         e['notes'] = []
