@@ -12,8 +12,16 @@ class Texpp:
         self.block_str = ''
         self.in_block = False
         self.out_str = ''
+        self.parsed_file_dir = None
         Texpp.self_ = self
         return
+
+
+    @staticmethod
+    def open_file(file_, flags = 'r'):
+        try: f = open(file_, flags)
+        except: f = None
+        return f
 
 
     def is_block_start(self, line):
@@ -27,7 +35,6 @@ class Texpp:
 
 
     def process_block(self):
-        # self.out_str += self.block_str
         eval(self.block_str)
         self.block_str = ''
         return
@@ -42,8 +49,12 @@ class Texpp:
         self.start_re = re.compile('\\\\begin{texpp}')
         self.end_re = re.compile('\\\\end{texpp}')
 
-        try: f = open(filename, 'r')
-        except: return -1
+        import os
+        self.parsed_file_dir = os.path.dirname(filename)
+        if len(self.parsed_file_dir) == 0: self.parsed_file_dir = '.'
+
+        f = self.open_file(filename)
+        if f == None: return -1
         while True:
             l = f.readline()
             if len(l) == 0: break
@@ -79,12 +90,38 @@ class Texpp:
         self.out_str += self.latex_escape(s) + '\\\\'
 
 
+    def extract_vhdl_interface(self, file_, name):
+        self.latex_print('\textbf{interface}: ' + file_.name + ', ' + name)
+        return None
+
+
+    def extract_vhdl_example(self, file_, name):
+        self.latex_print('\textbf{example}: ' + file_.name + ', ' + name)
+        return None
+
+
     def extract_(self, type_, file_, name, title):
         lang = self.ext_to_lang(file_)
-        if lang == None: return False
-        if lang != 'vhdl': return False
-        self.latex_print('\textbf{EXTRACTED} from ' + file_)
-        return True
+        err = None
+        if (lang == None) or (lang != 'vhdl'):
+            err = 'invalid file extension: ' + file_
+        else:
+            file_ = self.parsed_file_dir + '/' + file_
+            f = self.open_file(file_)
+            if f == None:
+                err = 'file not found ' + file_
+            else:
+                err = 'invalid type_'
+                if type_ == 'interface':
+                    err = self.extract_vhdl_interface(f, name)
+                elif type_ == 'example':
+                    err = self.extract_vhdl_example(f, name)
+
+        if err != None:
+            self.latex_print('\textbf{texpp error}: ' + err)
+            return -1
+
+        return 0
 
 
     @staticmethod
