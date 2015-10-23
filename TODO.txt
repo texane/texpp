@@ -1,4 +1,6 @@
-. add a way to find nearest comment block
+. add a way to find near comment blocks. For instance:
+.. extract comments in top of interface
+.. extract comments at beginning of the file
 . language agnostic tag based extraction. only assume in comments.
 . non language agnostic extraction: as currently done, but need rework
 . separate language parser and backends, ie. refer to staticmethods
