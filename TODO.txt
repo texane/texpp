@@ -1,0 +1,5 @@
+. add a way to find nearest comment block
+. language agnostic tag based extraction. only assume in comments.
+. non language agnostic extraction: as currently done, but need rework
+. separate language parser and backends, ie. refer to staticmethods
+. exclude section{}
