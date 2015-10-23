@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 
+# repo: https://github.com/texane/texpp
+# auth: fabien.lementec@gmail.com
+
+
 import re
 import os
 
